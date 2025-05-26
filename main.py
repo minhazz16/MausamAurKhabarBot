@@ -16,11 +16,25 @@ from subscriptions import get_all_subscribers, get_user_prefs
 from weather import get_weather, check_weather_alerts
 from news import get_news
 from dotenv import load_dotenv
+from flask import Flask
+import threading
 import os
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Flask server for Render health check
+app_flask = Flask(__name__)
+
+@app_flask.route("/healthz")
+def health_check():
+    return "OK", 200
+
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app_flask.run(host="0.0.0.0", port=port)
+
+# Telegram Bot
 async def notify_subscribers(context: ContextTypes.DEFAULT_TYPE):
     users = get_all_subscribers()
     for user_id, city in users:
@@ -58,7 +72,7 @@ async def notify_subscribers(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             print(f"Error notifying {user_id}: {e}")
 
-def main():
+def start_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
@@ -78,4 +92,9 @@ def main():
     app.run_polling()
 
 if __name__ == "__main__":
-    main()
+    # Flask server background me chalu karo
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.start()
+
+    # Telegram bot chalu karo
+    start_bot()
