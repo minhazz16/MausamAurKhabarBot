@@ -1,5 +1,4 @@
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram import Bot
 from bot_handlers import (
     start,
     help_command,
@@ -19,6 +18,8 @@ from dotenv import load_dotenv
 from flask import Flask
 import threading
 import os
+import asyncio
+from datetime import time
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -31,10 +32,10 @@ def health_check():
     return "OK", 200
 
 def run_flask():
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 5000))  # Render se port milega
     app_flask.run(host="0.0.0.0", port=port)
 
-# Telegram Bot
+# Telegram Bot notify function
 async def notify_subscribers(context: ContextTypes.DEFAULT_TYPE):
     users = get_all_subscribers()
     for user_id, city in users:
@@ -86,15 +87,18 @@ def start_bot():
     app.add_handler(CommandHandler("alert", check_alert))
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
 
-    app.job_queue.run_repeating(notify_subscribers, interval=10, first=10)
+    app.job_queue.run_daily(
+        notify_subscribers,
+        time=time(hour=8, minute=0, second=0)
+    )
 
     print("✅ Bot is running...")
     app.run_polling()
 
 if __name__ == "__main__":
-    # Flask server background me chalu karo
+    # Flask ko thread me chalu karo taaki Render ka health check ho sake
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
 
-    # Telegram bot chalu karo
+    # Telegram bot chalu karo (main thread me)
     start_bot()
