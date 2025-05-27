@@ -6,7 +6,7 @@
       "storm": true,
       "heat": true,
       "cold": true,
-      "snow": true
+      "snow": false
     }
   }
 }

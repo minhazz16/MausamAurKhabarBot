@@ -1,17 +1,12 @@
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
+    MessageHandler, filters, ContextTypes
+)
 from bot_handlers import (
-    start,
-    help_command,
-    send_news,
-    send_today_info,
-    send_weather_news,
-    subscribe,
-    update_city_command,
-    unsubscribe_command,
-    check_alert,
-    set_alert_prefs,
-    select_city,
-    button_handler
+    start, help_command, send_news, send_today_info,
+    weather, subscribe, update_city_command, unsubscribe_command,
+    alert, set_alert_prefs, handle_city_selection,
+    handle_unsubscribe_confirmation, handle_text_input
 )
 from subscriptions import get_all_subscribers, get_user_prefs
 from weather import get_weather, check_weather_alerts
@@ -20,11 +15,9 @@ from dotenv import load_dotenv
 from flask import Flask
 import threading
 import os
-import asyncio
+import logging
 from datetime import time
 from zoneinfo import ZoneInfo
-import logging
-from telegram.ext import ContextTypes, CallbackQueryHandler
 
 # Logging setup
 logging.basicConfig(
@@ -93,14 +86,20 @@ def start_bot():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("news", send_news))
     app.add_handler(CommandHandler("today", send_today_info))
-    app.add_handler(CommandHandler("weather", send_weather_news))
+    app.add_handler(CommandHandler("weather", weather))
     app.add_handler(CommandHandler("subscribe", subscribe))
     app.add_handler(CommandHandler("updatecity", update_city_command))
     app.add_handler(CommandHandler("unsubscribe", unsubscribe_command))
-    app.add_handler(CommandHandler("alert", check_alert))
+    app.add_handler(CommandHandler("alert", alert))
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
-    app.add_handler(CommandHandler("selectcity", select_city))
-    app.add_handler(CallbackQueryHandler(button_handler))
+
+    # कॉलबैक और मैसेज हैंडलर्स
+    app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^(weather|subscribe|updatecity|alert)_"))
+    app.add_handler(CallbackQueryHandler(handle_unsubscribe_confirmation, pattern="^unsubscribe_"))
+    app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^custom_|edit_"))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
+
+
 
     # Timezone aware scheduling with zoneinfo
     ist = ZoneInfo("Asia/Kolkata")

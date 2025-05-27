@@ -1,12 +1,13 @@
+# 👇 नीचे पूरा सही किया गया कोड है:
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes
+from telegram.ext import ContextTypes, CallbackQueryHandler
 from weather import get_weather, check_weather_alerts
 from news import get_news
 import random
 from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference
 import datetime
 import json
-import zoneinfo 
+import zoneinfo
 
 # 🎉 Fun Facts
 def load_fun_facts():
@@ -20,175 +21,188 @@ def load_fun_facts():
 def get_fun_fact():
     return random.choice(load_fun_facts())
 
+# 🌆 सिटी चुनने का इनलाइन कीबोर्ड (सभी कमांड्स के लिए)
+def get_city_keyboard(command_type):
+    keyboard = [
+        [InlineKeyboardButton("📍 Patna", callback_data=f"{command_type}_Patna")],
+        [InlineKeyboardButton("📍 Delhi", callback_data=f"{command_type}_Delhi")],
+        [InlineKeyboardButton("📍 Mumbai", callback_data=f"{command_type}_Mumbai")],
+        [
+            InlineKeyboardButton("✏️ अपनी सिटी एंटर करें", callback_data=f"custom_{command_type}"),
+            InlineKeyboardButton("🔄 सिटी बदलें", callback_data=f"edit_{command_type}")
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+# 🔄 इनलाइन बटन हैंडलर (सभी कमांड्स के लिए)
+async def handle_city_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    # कस्टम सिटी या एडिट मोड
+    if data.startswith(('custom_', 'edit_')):
+        command_type = data.split('_')[1]
+        await query.edit_message_text(f"✍️ कृपया {command_type} के लिए सिटी का नाम टाइप करें:")
+        context.user_data["awaiting_city_for"] = command_type
+        return
+
+    command_type, city = data.split('_', 1)
+    user_id = query.from_user.id
+
+    if command_type == "weather":
+        weather = get_weather(city)
+        reply = f"{weather}\n\n📰 *टॉप न्यूज़:*\n{get_news()}" if "⚠️" not in weather else weather
+        await query.edit_message_text(reply, parse_mode="Markdown")
+
+    elif command_type == "subscribe":
+        if is_subscribed(user_id):
+            await query.edit_message_text("ℹ️ आप पहले से सब्सक्राइब हैं! शहर बदलने के लिए /updatecity का उपयोग करें।")
+        else:
+            add_subscriber(user_id, city)
+            await query.edit_message_text(f"✅ {city} के लिए सब्सक्राइब हो गए!\nअब आपको रोज़ाना अपडेट मिलेंगे।")
+
+    elif command_type == "updatecity":
+        if not is_subscribed(user_id):
+            await query.edit_message_text("❌ पहले /subscribe करें।")
+        else:
+            update_city(user_id, city)
+            await query.edit_message_text(f"✅ आपकी सिटी अपडेट की गई: {city}")
+
+    elif command_type == "alert":
+        alerts = check_weather_alerts(city)
+        alert_msg = f"🚨 {city} के लिए अलर्ट:\n{alerts}" if alerts else f"✅ {city} में कोई चेतावनी नहीं।"
+        await query.edit_message_text(alert_msg)
+
+    elif command_type == "setalert":
+        await query.edit_message_text(f"⚙️ अलर्ट सेटिंग्स के लिए /setalert <प्रकार> <on/off> का उपयोग करें।")
+
 # ✅ START
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🙏 नमस्ते! मैं हूँ *MausamAurKhabarBot*, आपका मौसम और खबरों का साथी।\n\n"
-        "📍 अपने शहर का मौसम जानिए\n"
-        "📰 देश-दुनिया की टॉप न्यूज़ पढ़िए\n"
-        "🎉 रोज़ाना मजेदार तथ्य पाइए!\n\n"
+        "📍 अब आप किसी भी कमांड (/weather, /subscribe, आदि) पर सिटी चुन सकते हैं!\n\n"
         "⚡ उपयोगी कमांड्स:\n"
-        "• /weather [शहर] - मौसम जानकारी\n"
+        "• /weather - मौसम जानकारी\n"
         "• /news - ताज़ा खबरें\n"
         "• /today - आज की तारीख और तथ्य\n"
-        "• /subscribe [शहर] - रोज़ाना अपडेट\n"
-        "• /updatecity [नया शहर] - शहर बदलें\n"
+        "• /subscribe - रोज़ाना अपडेट\n"
+        "• /updatecity - शहर बदलें\n"
         "• /unsubscribe - अनसब्सक्राइब करें\n"
-        "• /alert [शहर] - मौसम चेतावनी\n"
-        "• /setalert [प्रकार] [on/off] - अलर्ट सेटिंग\n"
-        "• /selectcity - शहर चुनें बटन से\n"
-        "• /help - सभी कमांड्स\n\n"
-        "🚀 नए फीचर्स आने वाले हैं!",
+        "• /alert - मौसम चेतावनी\n"
+        "• /setalert - अलर्ट सेटिंग\n"
+        "• /help - सभी कमांड्स",
         parse_mode="Markdown"
     )
 
-# ✅ WEATHER + NEWS
-async def send_weather_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("कृपया शहर का नाम लिखें।\nउदाहरण: /weather Mehsi")
-        return
-    city = " ".join(context.args)
-    weather = get_weather(city)
-    if "⚠️" in weather:
-        await update.message.reply_text(weather)
-    else:
-        reply = (
-            f"{weather}\n\n"
-            f"{get_fun_fact()}\n\n"
-            f"📰 *टॉप न्यूज़:*\n{get_news()}"
-        )
-        await update.message.reply_text(reply, parse_mode="Markdown")
+# ✅ WEATHER
+async def weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🌦️ किस शहर का मौसम चाहिए?", reply_markup=get_city_keyboard("weather"))
 
-# ✅ NEWS
-async def send_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    news = get_news()
-    await update.message.reply_text(news)
+# ✅ SUBSCRIBE
+async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📌 रोज़ाना अपडेट के लिए सिटी चुनें:", reply_markup=get_city_keyboard("subscribe"))
 
-# ✅ TODAY
+# ✅ ALERT
+async def alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🚨 किस शहर के अलर्ट चेक करें?", reply_markup=get_city_keyboard("alert"))
+
+# ✅ UPDATE CITY
+async def update_city_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🔄 किस शहर में बदलाव करना चाहते हैं?", reply_markup=get_city_keyboard("updatecity"))
+
+# ✅ UNSUBSCRIBE
+async def unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("✅ हाँ, अनसब्सक्राइब करें", callback_data="unsubscribe_yes")],
+        [InlineKeyboardButton("❌ नहीं", callback_data="unsubscribe_no")]
+    ]
+    await update.message.reply_text("❌ क्या आप वाकई अनसब्सक्राइब करना चाहते हैं?", reply_markup=InlineKeyboardMarkup(keyboard))
+
+# ✅ HANDLE TEXT INPUT
+async def handle_text_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    city = update.message.text.strip()
+    command_type = context.user_data.get("awaiting_city_for")
+
+    if command_type == "weather":
+        weather = get_weather(city)
+        await update.message.reply_text(weather, parse_mode="Markdown")
+    elif command_type == "subscribe":
+        add_subscriber(user_id, city)
+        await update.message.reply_text(f"✅ {city} के लिए सब्सक्राइब हो गए!")
+    elif command_type == "updatecity":
+        update_city(user_id, city)
+        await update.message.reply_text(f"✅ आपकी सिटी अपडेट की गई: {city}")
+    elif command_type == "alert":
+        alerts = check_weather_alerts(city)
+        await update.message.reply_text(f"🚨 अलर्ट: {alerts}" if alerts else f"✅ {city} में कोई चेतावनी नहीं।")
+
+    context.user_data.pop("awaiting_city_for", None)
+
+# ✅ TODAY और NEWS
 async def send_today_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Set timezone to IST
     ist = zoneinfo.ZoneInfo("Asia/Kolkata")
     now = datetime.datetime.now(tz=ist)
     date_str = now.strftime("%d-%m-%Y %H:%M:%S")
+    await update.message.reply_text(f"📅 आज की तारीख: {date_str}\n\n{get_fun_fact()}")
 
-    await update.message.reply_text(
-        f"📅 आज की तारीख: {date_str}\n\n"
-        f"{get_fun_fact()}"
-    )
+async def send_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(get_news())
 
 # ✅ HELP
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🤖 सभी कमांड्स:\n\n"
-        "📍 /weather [शहर] - मौसम रिपोर्ट\n"
+        "📍 /weather - मौसम रिपोर्ट\n"
         "📰 /news - टॉप 3 खबरें\n"
         "📅 /today - तारीख + रोचक तथ्य\n"
-        "📌 /subscribe [शहर] - ऑटो अपडेट\n"
-        "🔄 /updatecity [नया शहर] - लोकेशन बदलें\n"
+        "📌 /subscribe - ऑटो अपडेट\n"
+        "🔄 /updatecity - लोकेशन बदलें\n"
         "❌ /unsubscribe - अनसब्सक्राइब\n"
-        "🚨 /alert [शहर] - मौसम चेतावनी\n"
-        "⚙️ /setalert [प्रकार] [on/off] - अलर्ट सेटिंग\n"
-        "📍 /selectcity - शहर चयन बटन\n"
+        "🚨 /alert - मौसम चेतावनी\n"
+        "⚙️ /setalert - अलर्ट सेटिंग\n"
         "📖 /help - सहायता"
     )
 
-# ✅ SUBSCRIBE
-async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not context.args:
-        await update.message.reply_text("कृपया शहर का नाम बताएं।\nउदाहरण: /subscribe Patna")
-        return
-    city = " ".join(context.args)
-    if is_subscribed(user_id):
-        await update.message.reply_text("ℹ️ आप पहले से सब्सक्राइब हैं!\nशहर बदलने के लिए /updatecity का उपयोग करें।")
-        return
-    if add_subscriber(user_id, city):
-        await update.message.reply_text(
-            f"✅ {city} के लिए सब्सक्राइब हो गए!\nअब आपको रोज़ाना:\n• मौसम\n• खबरें\n• रोचक तथ्य"
-        )
-    else:
-        await update.message.reply_text("⚠️ त्रुटि: सब्सक्रिप्शन असफल")
-
-# ✅ UPDATE CITY
-async def update_city_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not context.args:
-        await update.message.reply_text("कृपया नया शहर बताएं।\nउदाहरण: /updatecity Gaya")
-        return
-    new_city = " ".join(context.args)
-    if not is_subscribed(user_id):
-        await update.message.reply_text("❌ आप सब्सक्राइब नहीं हैं!\nपहले /subscribe करें।")
-        return
-    if update_city(user_id, new_city):
-        await update.message.reply_text(f"✅ अब आपको {new_city} का मौसम मिलेगा।")
-    else:
-        await update.message.reply_text("⚠️ त्रुटि: अपडेट असफल")
-
-# ✅ UNSUBSCRIBE
-async def unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not is_subscribed(user_id):
-        await update.message.reply_text("ℹ️ आप पहले से अनसब्सक्राइब हैं।")
-        return
-    if unsubscribe(user_id):
-        await update.message.reply_text("✅ सफलतापूर्वक अनसब्सक्राइब हो गए!")
-    else:
-        await update.message.reply_text("⚠️ त्रुटि: अनसब्सक्राइब असफल")
-
-# ✅ ALERT CHECK
-async def check_alert(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("कृपया शहर का नाम लिखें। उदाहरण: /alert Muzaffarpur")
-        return
-    city = " ".join(context.args)
-    alerts = check_weather_alerts(city)
-    if alerts:
-        await update.message.reply_text(f"🚨 {city} के लिए अलर्ट:\n{alerts}")
-    else:
-        await update.message.reply_text(f"✅ {city} में कोई विशेष चेतावनी नहीं है।")
-
-# ✅ SET ALERT PREFERENCE
-async def set_alert_prefs(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    if not is_subscribed(user_id):
-        await update.message.reply_text("❌ पहले /subscribe करें")
-        return
-    if not context.args or len(context.args) < 2:
-        await update.message.reply_text(
-            "⚠️ उपयोग: /setalert <alert_type> <on/off>\n"
-            "उदाहरण: /setalert rain on\n\n"
-            "उपलब्ध अलर्ट:\n- rain\n- storm\n- heat\n- cold\n- snow"
-        )
-        return
-    alert_type = context.args[0].lower()
-    status = context.args[1].lower() == 'on'
-    valid_alerts = ['rain', 'storm', 'heat', 'cold', 'snow']
-    if alert_type not in valid_alerts:
-        await update.message.reply_text("❌ अमान्य अलर्ट टाइप।")
-        return
-    if set_alert_preference(user_id, alert_type, status):
-        status_hi = "चालू" if status else "बंद"
-        await update.message.reply_text(f"✅ {alert_type} अलर्ट {status_hi} किया गया")
-    else:
-        await update.message.reply_text("⚠️ सेटिंग सेव नहीं हुई")
-
-# ✅ NEW: SELECT CITY (INLINE BUTTON)
-async def select_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("🌆 Patna", callback_data='city_Patna')],
-        [InlineKeyboardButton("🏙️ Muzaffarpur", callback_data='city_Muzaffarpur')],
-        [InlineKeyboardButton("🏞️ Gaya", callback_data='city_Gaya')],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("कृपया अपना शहर चुनें:", reply_markup=reply_markup)
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# 🔄 UNSUBSCRIBE कन्फर्मेशन
+async def handle_unsubscribe_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    data = query.data
-    if data.startswith('city_'):
-        city = data.split('_')[1]
-        await query.edit_message_text(
-            text=f"✅ आपने चुना: *{city}*\nअब आप `/weather {city}` से मौसम जान सकते हैं।",
-            parse_mode="Markdown"
-        )
+    if query.data == "unsubscribe_yes":
+        unsubscribe(query.from_user.id)
+        await query.edit_message_text("✅ सफलतापूर्वक अनसब्सक्राइब हो गए!")
+    else:
+        await query.edit_message_text("❌ अनसब्सक्राइब कैंसल किया गया।")
+
+# ✅ SET ALERT PREFERENCES
+async def set_alert_prefs(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if not context.args or len(context.args) != 2:
+        await update.message.reply_text("⚙️ उपयोग:/setalert <प्रकार> <on/off>\n\nउदाहरण: /setalert rain off\n\n उपलब्ध अलर्ट:\n-rain\n-storm\n-heat\n-colds\n-snow")
+        return
+
+    alert_type = context.args[0].lower()
+    status_arg = context.args[1].lower()
+    
+    if alert_type not in ['rain', 'storm', 'heat', 'cold', 'snow']:
+        await update.message.reply_text("⚠️ अलर्ट प्रकार अमान्य है। rain, storm, heat, cold, या snow में से चुनें।")
+        return
+
+    if status_arg not in ['on', 'off']:
+        await update.message.reply_text("⚠️ कृपया on या off में से चुनें।")
+        return
+
+    status = True if status_arg == "on" else False
+    success = set_alert_preference(user_id, alert_type, status)
+
+    if success:
+        await update.message.reply_text(f"✅ {alert_type} अलर्ट अब {'चालू' if status else 'बंद'} है।")
+    else:
+        await update.message.reply_text("❌ अलर्ट सेट करने में त्रुटि। पहले /subscribe करें।")
+
+# ➕ HANDLERS
+def add_handlers(application):
+    application.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^(weather|subscribe|updatecity|alert)_"))
+    application.add_handler(CallbackQueryHandler(handle_unsubscribe_confirmation, pattern="^unsubscribe_"))
+    application.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^custom_|edit_"))
