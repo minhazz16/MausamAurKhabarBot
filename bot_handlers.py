@@ -117,6 +117,12 @@ async def update_city_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 # ✅ UNSUBSCRIBE
 async def unsubscribe_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+        # ✅ नया चेक: अगर यूजर पहले से अनसब्सक्राइब है
+    if not is_subscribed(user_id):
+        await update.message.reply_text("ℹ️ आप पहले से ही अनसब्सक्राइब हैं! सब्सक्राइब करने के लिए /subscribe का उपयोग करें।")
+        return
+
     keyboard = [
         [InlineKeyboardButton("✅ हाँ, अनसब्सक्राइब करें", callback_data="unsubscribe_yes")],
         [InlineKeyboardButton("❌ नहीं", callback_data="unsubscribe_no")]
