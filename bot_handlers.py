@@ -6,6 +6,7 @@ import random
 from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference
 import datetime
 import json
+import zoneinfo 
 
 # 🎉 Fun Facts
 def load_fun_facts():
@@ -65,10 +66,14 @@ async def send_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ✅ TODAY
 async def send_today_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now()
+    # Set timezone to IST
+    ist = zoneinfo.ZoneInfo("Asia/Kolkata")
+    now = datetime.datetime.now(tz=ist)
     date_str = now.strftime("%d-%m-%Y %H:%M:%S")
+
     await update.message.reply_text(
-        f"📅 आज की तारीख: {date_str}\n\n{get_fun_fact()}"
+        f"📅 आज की तारीख: {date_str}\n\n"
+        f"{get_fun_fact()}"
     )
 
 # ✅ HELP
