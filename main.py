@@ -20,6 +20,15 @@ import threading
 import os
 import asyncio
 from datetime import time
+from zoneinfo import ZoneInfo
+import logging
+
+# Logging setup
+logging.basicConfig(
+    filename='bot_errors.log',
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.ERROR
+)
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -40,8 +49,9 @@ async def notify_subscribers(context: ContextTypes.DEFAULT_TYPE):
     users = get_all_subscribers()
     for user_id, city in users:
         try:
-            weather = get_weather(city)
-            news = get_news()
+            # Agar get_weather, get_news async hain toh await karo
+            weather = get_weather(city)  # synchronous assume kar raha hu
+            news = get_news()            # synchronous assume kar raha hu
             alerts = check_weather_alerts(city)
             user_prefs = get_user_prefs(user_id)
 
@@ -71,7 +81,7 @@ async def notify_subscribers(context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
         except Exception as e:
-            print(f"Error notifying {user_id}: {e}")
+            logging.error(f"Error notifying {user_id}: {e}")
 
 def start_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -87,9 +97,11 @@ def start_bot():
     app.add_handler(CommandHandler("alert", check_alert))
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
 
+    # Timezone aware scheduling with zoneinfo
+    ist = ZoneInfo("Asia/Kolkata")
     app.job_queue.run_daily(
         notify_subscribers,
-        time=time(hour=8, minute=0, second=0)
+        time=time(hour=8, minute=0, second=0, tzinfo=ist)
     )
 
     print("✅ Bot is running...")
