@@ -1,0 +1,45 @@
+2025-05-27 05:14:28,667 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 05:14:28,668 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 05:32:17,711 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 05:32:17,774 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 07:40:24,957 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 07:40:24,957 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:15:40,974 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:15:40,974 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:24:40,871 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:24:40,871 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:25:43,497 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:25:43,497 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:27:05,180 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:27:05,180 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:29:29,120 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:29:29,120 - INFO - [33mPress CTRL+C to quit[0m
+2025-05-27 08:51:16,282 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.11:5000
+2025-05-27 08:51:16,283 - INFO - [33mPress CTRL+C to quit[0m

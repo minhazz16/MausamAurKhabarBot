@@ -24,12 +24,16 @@ def get_fun_fact():
 # 🌆 सिटी चुनने का इनलाइन कीबोर्ड (सभी कमांड्स के लिए)
 def get_city_keyboard(command_type):
     keyboard = [
+        [InlineKeyboardButton("📍 Mehsi", callback_data=f"{command_type}_Mehsi")],
+        [InlineKeyboardButton("📍 Gaya", callback_data=f"{command_type}_Gaya")],
         [InlineKeyboardButton("📍 Patna", callback_data=f"{command_type}_Patna")],
         [InlineKeyboardButton("📍 Delhi", callback_data=f"{command_type}_Delhi")],
         [InlineKeyboardButton("📍 Mumbai", callback_data=f"{command_type}_Mumbai")],
+        [InlineKeyboardButton("📍 Kolkata", callback_data=f"{command_type}_Kolkata")],
+        [InlineKeyboardButton("📍 Jaipur", callback_data=f"{command_type}_Jaipur")],
         [
             InlineKeyboardButton("✏️ अपनी सिटी एंटर करें", callback_data=f"custom_{command_type}"),
-            InlineKeyboardButton("🔄 सिटी बदलें", callback_data=f"edit_{command_type}")
+            #InlineKeyboardButton("🔄 सिटी बदलें", callback_data=f"edit_{command_type}")
         ]
     ]
     return InlineKeyboardMarkup(keyboard)

@@ -1,0 +1,12 @@
+{
+  "487547333": {
+    "city": "Mehsi",
+    "prefs": {
+      "rain": true,
+      "storm": true,
+      "heat": true,
+      "cold": true,
+      "snow": false
+    }
+  }
+}
