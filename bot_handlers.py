@@ -5,6 +5,7 @@ from news import get_news
 import random
 from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference
 import datetime
+import pytz  # timezone के लिए नया import
 import json
 
 
@@ -57,13 +58,16 @@ async def send_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
     news = get_news()
     await update.message.reply_text(news)
 
+# === UPDATED send_today_info function with timezone handling ===
 async def send_today_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    now = datetime.datetime.now()
+    ist = pytz.timezone('Asia/Kolkata')  # IST timezone
+    now = datetime.datetime.now(ist)
     date_str = now.strftime("%d-%m-%Y %H:%M:%S")
     await update.message.reply_text(
         f"📅 आज की तारीख: {date_str}\n\n"
         f"{get_fun_fact()}"
     )
+# =============================================================
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
