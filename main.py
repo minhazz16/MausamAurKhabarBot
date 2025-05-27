@@ -9,7 +9,9 @@ from bot_handlers import (
     update_city_command,
     unsubscribe_command,
     check_alert,
-    set_alert_prefs
+    set_alert_prefs,
+    select_city,
+    button_handler
 )
 from subscriptions import get_all_subscribers, get_user_prefs
 from weather import get_weather, check_weather_alerts
@@ -22,6 +24,7 @@ import asyncio
 from datetime import time
 from zoneinfo import ZoneInfo
 import logging
+from telegram.ext import ContextTypes, CallbackQueryHandler
 
 # Logging setup
 logging.basicConfig(
@@ -96,6 +99,8 @@ def start_bot():
     app.add_handler(CommandHandler("unsubscribe", unsubscribe_command))
     app.add_handler(CommandHandler("alert", check_alert))
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
+    app.add_handler(CommandHandler("selectcity", select_city))
+    app.add_handler(CallbackQueryHandler(button_handler))
 
     # Timezone aware scheduling with zoneinfo
     ist = ZoneInfo("Asia/Kolkata")
