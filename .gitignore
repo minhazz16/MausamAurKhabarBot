@@ -1,1 +1,5 @@
+__pycache__/
+*.pyc
+bot_errors.log
+subscribers.json
 .env
