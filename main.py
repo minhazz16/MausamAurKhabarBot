@@ -6,7 +6,8 @@ from bot_handlers import (
     start, help_command, send_news, send_today_info,
     weather, subscribe, update_city_command, unsubscribe_command,
     alert, set_alert_prefs, handle_city_selection,
-    handle_unsubscribe_confirmation, handle_text_input
+    handle_unsubscribe_confirmation, handle_text_input,
+    status_command, broadcast_command
 )
 from subscriptions import get_all_subscribers, get_user_prefs
 from weather import get_weather, check_weather_alerts
@@ -18,7 +19,6 @@ import os
 import logging
 from datetime import time
 from zoneinfo import ZoneInfo
-from bot_handlers import status_command
 
 # Logging setup
 logging.basicConfig(
@@ -93,14 +93,15 @@ def start_bot():
     app.add_handler(CommandHandler("unsubscribe", unsubscribe_command))
     app.add_handler(CommandHandler("alert", alert))
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
+    app.add_handler(CommandHandler(["status", "profile"], status_command))
+    app.add_handler(CommandHandler("broadcast", broadcast_command))
 
     # कॉलबैक और मैसेज हैंडलर्स
     app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^(weather|subscribe|updatecity|alert)_"))
     app.add_handler(CallbackQueryHandler(handle_unsubscribe_confirmation, pattern="^unsubscribe_"))
     app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^custom_|edit_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
-    app.add_handler(CommandHandler(["status", "profile"], status_command))
-
+    
     # Timezone aware scheduling with zoneinfo
     ist = ZoneInfo("Asia/Kolkata")
     app.job_queue.run_daily(

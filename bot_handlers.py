@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes, CallbackQueryHandler
 from weather import get_weather, check_weather_alerts
 from news import get_news
 import random
-from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference
+from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference, get_all_subscribers
 import datetime
 import json
 import zoneinfo
@@ -245,6 +245,34 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🔔 अलर्ट प्रेफरेंस:\n{alert_text}",
         parse_mode="Markdown"
     )
+
+# ✅ Brodcast
+
+async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    ADMIN_ID = 123456789  # 👈 Apna ID yahan likho
+    user_id = update.effective_user.id
+
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("❌ आपके पास यह कमांड चलाने की अनुमति नहीं है।")
+        return
+
+    if not context.args:
+        await update.message.reply_text("⚠️ उपयोग:\n/broadcast <संदेश>")
+        return
+
+    message = "📢 " + " ".join(context.args)
+    subscribers = get_all_subscribers()
+    success_count = 0
+
+    for uid, _ in subscribers:
+        try:
+            await context.bot.send_message(chat_id=uid, text=message)
+            success_count += 1
+        except Exception as e:
+            print(f"❌ Cannot message user {uid}: {e}")
+
+    await update.message.reply_text(f"✅ संदेश {success_count} यूज़र्स को भेजा गया।")
+
 
 # ➕ HANDLERS
 def add_handlers(application):
