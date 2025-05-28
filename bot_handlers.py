@@ -199,7 +199,7 @@ async def handle_unsubscribe_confirmation(update: Update, context: ContextTypes.
 async def set_alert_prefs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not context.args or len(context.args) != 2:
-        await update.message.reply_text("⚙️ उपयोग:/setalert <प्रकार> <on/off>\n\nउदाहरण: /setalert rain off\n\n उपलब्ध अलर्ट:\n-rain\n-storm\n-heat\n-colds\n-snow")
+        await update.message.reply_text("⚙️ उपयोग:/setalert <प्रकार> <on/off>\n\nउदाहरण: /setalert rain off\n\n उपलब्ध अलर्ट:\n-rain\n-storm\n-heat\n-cold\n-snow")
         return
 
     alert_type = context.args[0].lower()
