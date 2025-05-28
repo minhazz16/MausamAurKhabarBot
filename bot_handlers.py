@@ -1,7 +1,7 @@
 # 👇 नीचे पूरा सही किया गया कोड है:
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
-from weather import get_weather, check_weather_alerts
+from weather import get_weather, check_weather_alerts, get_aqi
 from news import get_news
 import random
 from subscriptions import (
@@ -299,6 +299,15 @@ async def count_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👥 *कुल सब्सक्राइब्ड यूज़र:* {total}\n\n{city_text}",
         parse_mode="Markdown"
     )
+
+async def aqi_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("⚠️ कृपया शहर का नाम दें, जैसे: /aqi Delhi")
+        return
+
+    city = " ".join(context.args)
+    aqi_data = get_aqi(city)
+    await update.message.reply_text(aqi_data, parse_mode="Markdown")
 
 
 # ➕ HANDLERS
