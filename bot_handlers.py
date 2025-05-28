@@ -9,6 +9,12 @@ import datetime
 import json
 import zoneinfo
 from subscriptions import get_user_profile
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+ADMIN_ID = int(os.getenv("ADMIN_ID"))
+
 
 # 🎉 Fun Facts
 def load_fun_facts():
@@ -249,7 +255,6 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ✅ Brodcast
 
 async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ADMIN_ID = 123456789  # 👈 Apna ID yahan likho
     user_id = update.effective_user.id
 
     if user_id != ADMIN_ID:
