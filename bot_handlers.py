@@ -211,6 +211,40 @@ async def set_alert_prefs(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ अलर्ट सेट करने में त्रुटि। पहले /subscribe करें।")
 
+# ✅ STATUS
+async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    prefs = get_user_prefs(user_id)
+
+    if not is_subscribed(user_id):
+        await update.message.reply_text("ℹ️ आप किसी भी अपडेट के लिए सब्सक्राइब नहीं हैं।")
+        return
+
+    city = prefs.get('city', '❓ अज्ञात')
+    alert_prefs = prefs.get('prefs', {})
+
+    alert_lines = []
+    for alert_type, status in alert_prefs.items():
+        emoji = "✅" if status else "❌"
+        name_map = {
+            "rain": "बारिश",
+            "storm": "तूफान",
+            "heat": "गर्मी",
+            "cold": "ठंड",
+            "snow": "बर्फबारी"
+        }
+        alert_lines.append(f"{emoji} {name_map.get(alert_type, alert_type)}")
+
+    alert_text = "\n".join(alert_lines)
+
+    await update.message.reply_text(
+        f"👤 *आपकी प्रोफाइल:*\n\n"
+        f"📍 शहर: *{city}*\n"
+        f"🔔 अलर्ट प्रेफरेंस:\n{alert_text}",
+        parse_mode="Markdown"
+    )
+
+
 # ➕ HANDLERS
 def add_handlers(application):
     application.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^(weather|subscribe|updatecity|alert)_"))

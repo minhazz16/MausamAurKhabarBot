@@ -18,6 +18,7 @@ import os
 import logging
 from datetime import time
 from zoneinfo import ZoneInfo
+from bot_handlers import status_command
 
 # Logging setup
 logging.basicConfig(
@@ -98,7 +99,7 @@ def start_bot():
     app.add_handler(CallbackQueryHandler(handle_unsubscribe_confirmation, pattern="^unsubscribe_"))
     app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^custom_|edit_"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
-
+    app.add_handler(CommandHandler(["status", "profile"], status_command))
 
 
     # Timezone aware scheduling with zoneinfo
