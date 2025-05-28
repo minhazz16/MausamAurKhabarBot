@@ -115,6 +115,17 @@ def get_user_prefs(user_id):
             return data.get(user_key, {}).get('prefs', {})
     except:
         return {}
+def get_user_profile(user_id):
+    ensure_file()
+    try:
+        with open(SUBSCRIBERS_FILE, 'r') as f:
+            data = json.load(f)
+            data = migrate_old_format(data)
+            user_key = str(user_id)
+            return data.get(user_key)
+    except:
+        return None
+    
 
 def set_alert_preference(user_id, alert_type, status=True):
     ensure_file()

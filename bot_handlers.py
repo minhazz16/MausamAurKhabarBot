@@ -8,6 +8,7 @@ from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribe
 import datetime
 import json
 import zoneinfo
+from subscriptions import get_user_profile
 
 # 🎉 Fun Facts
 def load_fun_facts():
@@ -212,16 +213,17 @@ async def set_alert_prefs(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ अलर्ट सेट करने में त्रुटि। पहले /subscribe करें।")
 
 # ✅ STATUS
+
 async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    prefs = get_user_prefs(user_id)
+    profile = get_user_profile(user_id)
 
-    if not is_subscribed(user_id):
+    if not profile:
         await update.message.reply_text("ℹ️ आप किसी भी अपडेट के लिए सब्सक्राइब नहीं हैं।")
         return
 
-    city = prefs.get('city', '❓ अज्ञात')
-    alert_prefs = prefs.get('prefs', {})
+    city = profile.get('city', '❓ अज्ञात')
+    alert_prefs = profile.get('prefs', {})
 
     alert_lines = []
     for alert_type, status in alert_prefs.items():
@@ -235,7 +237,7 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         alert_lines.append(f"{emoji} {name_map.get(alert_type, alert_type)}")
 
-    alert_text = "\n".join(alert_lines)
+    alert_text = "\n".join(alert_lines) if alert_lines else "❌ कोई अलर्ट प्रेफरेंस नहीं मिली।"
 
     await update.message.reply_text(
         f"👤 *आपकी प्रोफाइल:*\n\n"
@@ -243,7 +245,6 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🔔 अलर्ट प्रेफरेंस:\n{alert_text}",
         parse_mode="Markdown"
     )
-
 
 # ➕ HANDLERS
 def add_handlers(application):

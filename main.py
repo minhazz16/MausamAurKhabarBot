@@ -101,7 +101,6 @@ def start_bot():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_input))
     app.add_handler(CommandHandler(["status", "profile"], status_command))
 
-
     # Timezone aware scheduling with zoneinfo
     ist = ZoneInfo("Asia/Kolkata")
     app.job_queue.run_daily(
