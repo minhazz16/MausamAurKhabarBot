@@ -40,6 +40,8 @@ def check_weather_alerts(city):
         print(f"Alert check error: {e}")
         return None
 
+
+
 def get_weather(city):
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=hi"
@@ -53,15 +55,45 @@ def get_weather(city):
         feels_like = res["main"]["feels_like"]
         humidity = res["main"]["humidity"]
 
-        return (
-            f"☁️ {city.title()} का मौसम:\n"
+        # Weather Text
+        weather_text = (
+            f"☁️ *{city.title()} का मौसम:*\n"
             f"• हालत: {weather_desc}\n"
-            f"• तापमान: {temp}°C 🔥\n"
+            f"• तापमान: {temp}°C\n"
             f"• नमी: {humidity}%\n"
             f"• महसूस हो रहा: {feels_like}°C\n"
         )
+
+        # AQI Section
+        lat, lon = get_coordinates(city)
+        if not lat or not lon:
+            return weather_text + "\n⚠️ AQI डेटा नहीं मिला।"
+
+        aqi_url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
+        aqi_res = requests.get(aqi_url).json()
+        aqi = aqi_res["list"][0]["main"]["aqi"]
+
+        level_map = {
+            1: "🟢 अच्छा",
+            2: "🟡 ठीक-ठाक",
+            3: "🟠 मध्यम",
+            4: "🔴 खराब",
+            5: "⚫ बहुत खराब"
+        }
+
+        components = aqi_res["list"][0]["components"]
+        aqi_text = (
+            f"\n🌫️ *AQI रिपोर्ट:*\n"
+            f"• स्तर: {level_map.get(aqi, '❓')}\n"
+            f"• PM2.5: {components.get('pm2_5', '?')} µg/m³\n"
+            f"• PM10: {components.get('pm10', '?')} µg/m³"
+        )
+
+        return weather_text + aqi_text
+
     except Exception as e:
-        return f"⚠️ मौसम फ़ेच करने में त्रुटि: {str(e)}"
+        return f"⚠️ मौसम/AQI फ़ेच करने में त्रुटि: {str(e)}"
+
     
 def get_coordinates(city):
     try:
