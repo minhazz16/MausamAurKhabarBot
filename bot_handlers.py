@@ -4,7 +4,11 @@ from telegram.ext import ContextTypes, CallbackQueryHandler
 from weather import get_weather, check_weather_alerts
 from news import get_news
 import random
-from subscriptions import add_subscriber, update_city, unsubscribe, is_subscribed, get_user_prefs, set_alert_preference, get_all_subscribers
+from subscriptions import (
+  add_subscriber, update_city,
+  unsubscribe, is_subscribed, get_user_prefs,
+  set_alert_preference, get_all_subscribers, get_subscriber_stats
+  )
 import datetime
 import json
 import zoneinfo
@@ -277,6 +281,24 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"❌ Cannot message user {uid}: {e}")
 
     await update.message.reply_text(f"✅ संदेश {success_count} यूज़र्स को भेजा गया।")
+
+# Subscriber count
+
+async def count_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("❌ आपके पास यह कमांड चलाने की अनुमति नहीं है।")
+        return
+
+    total, city_counts = get_subscriber_stats()
+    city_lines = [f"📍 {city}: {count}" for city, count in city_counts.items()]
+    city_text = "\n".join(city_lines) if city_lines else "❌ कोई सब्सक्राइबर नहीं मिला।"
+
+    await update.message.reply_text(
+        f"👥 *कुल सब्सक्राइब्ड यूज़र:* {total}\n\n{city_text}",
+        parse_mode="Markdown"
+    )
 
 
 # ➕ HANDLERS

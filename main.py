@@ -7,7 +7,7 @@ from bot_handlers import (
     weather, subscribe, update_city_command, unsubscribe_command,
     alert, set_alert_prefs, handle_city_selection,
     handle_unsubscribe_confirmation, handle_text_input,
-    status_command, broadcast_command
+    status_command, broadcast_command, count_command
 )
 from subscriptions import get_all_subscribers, get_user_prefs
 from weather import get_weather, check_weather_alerts
@@ -95,6 +95,7 @@ def start_bot():
     app.add_handler(CommandHandler("setalert", set_alert_prefs))
     app.add_handler(CommandHandler(["status", "profile"], status_command))
     app.add_handler(CommandHandler("broadcast", broadcast_command))
+    app.add_handler(CommandHandler("count", count_command))
 
     # कॉलबैक और मैसेज हैंडलर्स
     app.add_handler(CallbackQueryHandler(handle_city_selection, pattern="^(weather|subscribe|updatecity|alert)_"))

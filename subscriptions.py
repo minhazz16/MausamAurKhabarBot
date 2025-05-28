@@ -146,3 +146,19 @@ def set_alert_preference(user_id, alert_type, status=True):
     except Exception as e:
         print(f"Prefs save error: {e}")
         return False
+    
+def get_subscriber_stats():
+    """Returns total subscriber count and city-wise breakdown"""
+    ensure_file()
+    try:
+        from collections import Counter
+        with open(SUBSCRIBERS_FILE, 'r') as f:
+            subscribers = json.load(f)
+            subscribers = migrate_old_format(subscribers)
+        total = len(subscribers)
+        city_list = [data.get('city', '❓') for data in subscribers.values()]
+        city_counts = Counter(city_list)
+        return total, dict(city_counts)
+    except Exception as e:
+        print(f"Error in get_subscriber_stats: {e}")
+        return 0, {}
