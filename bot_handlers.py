@@ -2,13 +2,13 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler
 from weather import get_weather, check_weather_alerts
-from news import get_news
 import random
 from subscriptions import (
   add_subscriber, update_city,
   unsubscribe, is_subscribed, get_user_prefs,
   set_alert_preference, get_all_subscribers, get_subscriber_stats
   )
+from news import get_news
 import datetime
 import json
 import zoneinfo
@@ -67,8 +67,7 @@ async def handle_city_selection(update: Update, context: ContextTypes.DEFAULT_TY
 
     if command_type == "weather":
         weather = get_weather(city)
-        reply = f"{weather}\n\n📰 *टॉप न्यूज़:*\n{get_news()}" if "⚠️" not in weather else weather
-        await query.edit_message_text(reply, parse_mode="Markdown")
+        await query.edit_message_text(weather, parse_mode="Markdown")
 
     elif command_type == "subscribe":
         if is_subscribed(user_id):
