@@ -106,32 +106,3 @@ def get_coordinates(city):
         return None, None
     except:
         return None, None
-
-def get_aqi(city):
-    lat, lon = get_coordinates(city)
-    if not lat or not lon:
-        return "⚠️ शहर का AQI डेटा नहीं मिला।"
-
-    try:
-        url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={API_KEY}"
-        res = requests.get(url).json()
-        aqi = res["list"][0]["main"]["aqi"]
-
-        level_map = {
-            1: "🟢 अच्छा",
-            2: "🟡 ठीक-ठाक",
-            3: "🟠 मध्यम",
-            4: "🔴 खराब",
-            5: "⚫ बहुत खराब"
-        }
-
-        components = res["list"][0]["components"]
-        return (
-            f"🌫️ *AQI रिपोर्ट – {city.title()}*\n"
-            f"• AQI स्तर: {level_map.get(aqi, '❓')}\n"
-            f"• PM2.5: {components.get('pm2_5', '?')} µg/m³\n"
-            f"• PM10: {components.get('pm10', '?')} µg/m³"
-        )
-    except Exception as e:
-        return f"⚠️ AQI लाने में त्रुटि: {str(e)}"
-
